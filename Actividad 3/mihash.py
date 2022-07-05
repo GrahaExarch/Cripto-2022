@@ -1,7 +1,7 @@
-import base64
-import binascii
+import hashlib
 import textwrap
 import time
+from math import log
 
 base64Alph = [
     'A',
@@ -69,6 +69,16 @@ base64Alph = [
     '+',
     '/',
 ]
+
+
+def mide_tiempo(funcion):
+    def funcion_medida(*args, **kwargs):
+        inicio = time.time()
+        c = funcion(*args, **kwargs)
+        print(time.time() - inicio)
+        return c
+
+    return funcion_medida
 
 
 def toBits(bits: list) -> list:
@@ -140,17 +150,14 @@ def splitBits(bits: str):
 def toBase64(hashedBits: str) -> str:
     hashSplit = textwrap.wrap(hashedBits, 6)
     base64 = ""
-
     for i in hashSplit:
         bin_int = int(i, 2)
         base64 += base64Alph[bin_int]
-
-    print(f"bin: {base64} ")
-
-    return
+    return base64
 
 
-def zaHashu(x):
+@mide_tiempo
+def zaHashu(x: str):
     bits = toBits(x)
     seed = createSeed(bits)
     hashBits = bestHash(bits, seed)
@@ -158,16 +165,110 @@ def zaHashu(x):
     return hash
 
 
+def entropy(word: str):
+    L = len(word)
+    W = 64
+    H = L * log(W, 2)
+    return H
+
+
+def calculateEntropy(word: str):
+    if word:
+        option = input(
+            f'Se detecto que hasheo --> {word}, desea utilizarla? (Y/N)'
+        )
+        while True:
+            if option == 'Y':
+                print(
+                    """======================================================
+                                    Calculando Entropia
+                    ======================================================"""
+                )
+                entropia = entropy(word)
+                print(f"La entropia del hash es: {entropia}")
+                break
+            if option == 'N':
+                calculo = input(
+                    """Porfavor Ingresa la palabra a la cual le deseas
+                    calcular la entropia: """
+                )
+                print(
+                    """======================================================
+                                Calculando Entropia
+                    ======================================================"""
+                )
+                entropia = entropy(calculo)
+                print(f"La entropia del hash es: {entropia}")
+                break
+    else:
+        calculo = input(
+            """Porfavor Ingresa la palabra a la cual le deseas calcular la entropia: """
+        )
+        print(
+            """======================================================
+                            Calculando Entropia
+            ======================================================"""
+        )
+        entropia = entropy(calculo)
+        print(f"La entropia del hash es: {entropia}")
+    return
+
+
 def main():
-    print(
+    hash = ""
+    word = ""
+    while True:
+        print(
+            """
+        1.Calcular Hash de Una palabra.
+        2.Calcular Hash desde el archivo rockyou.txt
+        3.Calcular Hash desde un archivo propio.
+        4.Calcular Entropia Za Hashu.
+        5.Comparar Entropia.
+        9.Salir
         """
-    1.Add a Student
-    2.Delete a Student
-    3.Look Up Student Record
-    4.Exit/Quit
-    """
-    )
-    x = input("Ingrese la operacion que desea Realizar: ")
+        )
+        x = input("Ingrese la operacion que desea Realizar: ")
+
+        if x == '1':
+            word = input("Ingrese la palabra que desea hashear: ")
+            hash = zaHashu(word)
+            print(f"El hash de --> {word} <-- es: {hash}")
+
+        if x == '2':
+            print("Leyendo archivo rockyou.txt")
+            test = input(
+                """
+                    Prueba 1: 1 entrada de texto.
+                    Prueba 2: 10 entrada de texto.
+                    Prueba 3: 20 entrada de texto.
+                    Prueba 4: 50 entrada de texto.
+            Que prueba desea realizar? (Ingrese Numero de la Prueba):   """
+            )
+            with open('rockyou.txt') as file:
+                for i in range():
+                    line = file.readline()
+
+        if x == '3':
+            print("Por favor ingresa el nombre del archivo a leer")
+
+        if x == '4':
+            if word:
+                calculateEntropy(word)
+            else:
+                calculateEntropy(word)
+
+        if x == '5':
+            print("comparando")
+
+        if x == '9':
+            print("Adios")
+            break
+        else:
+            print("Por favor ingresa una opcion valida")
+            continue
+
+    return
 
 
 if __name__ == "__main__":
