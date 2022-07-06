@@ -4,7 +4,6 @@ import textwrap
 import time
 from math import log
 from timeit import default_timer as timer
-from weakref import WeakKeyDictionary
 
 base64Alph = [
     'A',
