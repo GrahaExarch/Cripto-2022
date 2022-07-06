@@ -72,6 +72,7 @@ base64Alph = [
     '+',
     '/',
 ]
+totalTime = 0
 
 
 def measure_time(funcion: Callable) -> Callable:
@@ -89,12 +90,16 @@ def measure_time(funcion: Callable) -> Callable:
     """
 
     def measure_func(*args, **kwargs):
+        global totalTime
         inicio = timer()
+        show = kwargs.get('showPrint', True)
         c = funcion(*args, **kwargs)
-        print(
-            '============================================================================'
-        )
-        print(f"\u2193 Tiempo de Ejecucion: {float(timer() - inicio)}")
+        if show:
+            print(
+                '============================================================================'
+            )
+            print(f"\u2193 Tiempo de Ejecucion: {float(timer() - inicio)}")
+        totalTime += float(timer() - inicio)
         return c
 
     return measure_func
@@ -178,10 +183,18 @@ def bestHash(bitList: list, seed: str) -> str:
     hashedBits = ""
     count = 0
     seedSplit = textwrap.wrap(seed, 7)
+    if len(seedSplit) < 8:
+        seedSplit = list(
+            map(
+                lambda x: (x + x[0] * (7 - len(x))) if len(x) < 7 else x,
+                seedSplit,
+            )
+        )
     for char in bitList:
+        count = (count + 1) if count == (len(seedSplit) - 1) else 0
         a = xor(char, seedSplit[count])
         hashedBits += a + char
-        count = count + 1 if count < 7 else 0
+
     lenght = len(hashedBits)
     if lenght < 330:
         hashedList = textwrap.wrap(hashedBits, 7)
@@ -246,7 +259,7 @@ def toBase64(hashedBits: str) -> str:
 
 
 @measure_time
-def zaHashu(x: str) -> str:
+def zaHashu(x: str, showPrint: bool = True) -> str:
     """Se encarga de llamar las funciones necesarias para
         obtener un hash "za hash"
 
@@ -254,6 +267,8 @@ def zaHashu(x: str) -> str:
     ----------
     x : str
         string a hashear
+    showPrint : bool, optional
+        determina si se muestra el tiempo de ejecucion en measure_time, by default True
     Returns
     -------
     str: string hasheado en za hash
@@ -268,13 +283,15 @@ def zaHashu(x: str) -> str:
 
 
 @measure_time
-def md5(word: str) -> str:
+def md5(word: str, showPrint: bool = True) -> str:
     """calcula el hash md5 de un string dado
 
     Parameters
     ----------
     word : str
         string a hashear
+    showPrint : bool, optional
+        determina si se muestra el tiempo de ejecucion en measure_time, by default True
     Returns
     -------
     str: string hasheado en md5
@@ -286,13 +303,15 @@ def md5(word: str) -> str:
 
 
 @measure_time
-def sha256(word: str) -> str:
+def sha256(word: str, showPrint: bool = True) -> str:
     """calcula el hash sha256 de un string dado
 
     Parameters
     ----------
     word : str
         string a hashear
+    showPrint : bool, optional
+        determina si se muestra el tiempo de ejecucion en measure_time, by default True
     Returns
     -------
     str: string hasheado en sha256
@@ -304,13 +323,15 @@ def sha256(word: str) -> str:
 
 
 @measure_time
-def sha1(word: str) -> str:
-    """Calcula el hash sha1 de un string dado
+def sha1(word: str, showPrint: bool = True) -> str:
+    """calcula el hash sha1 de un string dado
 
     Parameters
     ----------
     word : str
         string a hashear
+    showPrint : bool, optional
+        determina si se muestra el tiempo de ejecucion en measure_time, by default True
     Returns
     -------
     str: string hasheado en sha1
@@ -413,13 +434,15 @@ def main():
     word = ""
     pruebas = {'1': 1, '2': 10, '3': 20, '4': 50}
     while True:
+        global totalTime
+        totalTime = 0
         print(
             """============================================================================\n
         1.Calcular Hash de Una palabra.
         2.Calcular Hash desde archivo propio.
         3.Calcular Hash desde archivo rockyou.txt
         4.Calcular Entropia Za Hashu.
-        5.Comparar Entropia y Ejecucion (MD5/SHA1/SHA256).
+        5.Comparar Ejecucion (MD5/SHA1/SHA256).
         9.Salir\n\n============================================================================"""
         )
         x = input("Ingrese la operacion que desea Realizar: ")
@@ -458,13 +481,13 @@ def main():
             Prueba 2: 10 entrada de texto.
             Prueba 3: 20 entrada de texto.
             Prueba 4: 50 entrada de texto.
+            Prueba 5: 1000 entradas de texto.
 
 ============================================================================
 Que prueba desea realizar? (Ingrese Numero de la Prueba):"""
             )
             print("Leyendo archivo rockyou.txt")
             if test in pruebas.keys():
-                print('owo')
                 with open('rockyou.txt') as file:
                     for i in range(pruebas[test]):
                         line = file.readline()
@@ -474,9 +497,21 @@ Que prueba desea realizar? (Ingrese Numero de la Prueba):"""
     Palabra {i+1}: {line} 
     Hash: {hash}"""
                         )
+                print(
+                    f"""============================================================================
+                    Demoro en total {totalTime}\n============================================================================"""
+                )
                 file.close()
-            else:
-                print('unu')
+            elif test == '5':
+                with open('rockyou.txt') as file:
+                    for i in range(1000):
+                        line = file.readline()
+                        hash = zaHashu(line, showPrint=False)
+                print(
+                    f"""============================================================================
+                    Demoro en total {totalTime}\n============================================================================"""
+                )
+                file.close()
 
         elif x == '4':
             if word:
@@ -485,65 +520,89 @@ Que prueba desea realizar? (Ingrese Numero de la Prueba):"""
                 calculateEntropy(word)
 
         elif x == '5':
-            if word:
-                option = input(
-                    f'Se detecto que hasheo --> {word}, desea utilizarla?'
-                    ' (Y/N)'
-                )
-                while True:
-                    if option == 'Y':
-                        print(
-                            """============================================================================
-                            Calculando Tiempo de Ejecucion\n============================================================================"""
-                        )
-                        entropia = entropy(word)
-                        print(f"La entropia de {word} es: {entropia}")
-                        myhash = zaHashu(word)
-                        print(f"el hash generado por za hash es: {myhash}")
-                        hashmd5 = md5(word)
-                        print(f"el hash generado por md5 es: {hashmd5}")
-                        hashsha1 = sha1(word)
-                        print(f"el hash generado por sha1 es: {hashsha1}")
-                        hashsha256 = sha256(word)
-                        print(f"el hash generado por sha256 es: {hashsha256}")
-                        break
-                    elif option == 'N':
-                        word = input(
-                            """Porfavor Ingresa la palabra con la que deseas realizar la comparacion: """
-                        )
-                        print(
-                            """============================================================================
-                            Calculando Tiempo de Ejecucion\n============================================================================"""
-                        )
-                        entropia = entropy(word)
-                        print(f"La entropia de {word} es: {entropia}")
-                        myhash = zaHashu(word)
-                        print(f"el hash generado por za hash es: {myhash}")
-                        hashmd5 = md5(word)
-                        print(f"el hash generado por md5 es: {hashmd5}")
-                        hashsha1 = sha1(word)
-                        print(f"el hash generado por sha1 es: {hashsha1}")
-                        hashsha256 = sha256(word)
-                        print(f"el hash generado por sha256 es: {hashsha256}")
-                        break
-            else:
-                word = input(
-                    """Porfavor Ingresa la palabra con la que deseas realizar la comparacion: """
-                )
-                print(
-                    """============================================================================
-                    Calculando Tiempo de Ejecucion\n============================================================================"""
-                )
-                entropia = entropy(word)
-                print(f"La entropia de {word} es: {entropia}")
-                myhash = zaHashu(word)
-                print(f"el hash generado por za hash es: {myhash}")
-                hashmd5 = md5(word)
-                print(f"el hash generado por md5 es: {hashmd5}")
-                hashsha1 = sha1(word)
-                print(f"el hash generado por sha1 es: {hashsha1}")
-                hashsha256 = sha256(word)
-                print(f"el hash generado por sha256 es: {hashsha256}")
+            test = input(
+                """
+            Prueba 1: 1 entrada de texto.
+            Prueba 2: 10 entrada de texto.
+            Prueba 3: 20 entrada de texto.
+            Prueba 4: 50 entrada de texto.
+            Prueba 5: 100000 entradas de texto.
+
+============================================================================
+Que prueba desea realizar? (Ingrese Numero de la Prueba):"""
+            )
+            print(
+                """============================================================================
+                Calculando Tiempo de Ejecucion\n============================================================================"""
+            )
+            lineList = []
+            if test in pruebas.keys():
+                with open('rockyou.txt') as file:
+                    for i in range(pruebas[test]):
+                        line = file.readline()
+                        lineList.append(line)
+                    for i in lineList:
+                        hash = zaHashu(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        za Hash demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = md5(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        md5 demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = sha1(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        sha1 demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = sha256(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        sha256 demoro en total {totalTime}\n============================================================================"""
+                    )
+                file.close()
+            elif test == '5':
+                with open('rockyou.txt') as file:
+                    for i in range(100000):
+                        line = file.readline()
+                        lineList.append(line)
+                    for i in lineList:
+                        hash = zaHashu(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        za Hash demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = md5(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        md5 demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = sha1(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        sha1 demoro en total {totalTime}\n============================================================================"""
+                    )
+                    totalTime = 0
+                    for i in lineList:
+                        hash = sha256(i, showPrint=False)
+                    print(
+                        f"""============================================================================
+                        sha256 demoro en total {totalTime}\n============================================================================"""
+                    )
+
+                file.close()
 
         elif x == '9':
             print("Adios")
