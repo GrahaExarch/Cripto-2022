@@ -4,6 +4,7 @@ import textwrap
 import time
 from math import log
 from timeit import default_timer as timer
+from typing import Callable
 
 base64Alph = [
     'A',
@@ -73,8 +74,21 @@ base64Alph = [
 ]
 
 
-def mide_tiempo(funcion):
-    def funcion_medida(*args, **kwargs):
+def measure_time(funcion: Callable) -> Callable:
+    """Mide el tiempo de ejecucion
+
+    Parameters
+    ----------
+    funcion : function
+        funcion a la cual se le mide el tiempo
+    Returns
+    -------
+    function: resultado de la funcion
+    :Authors:
+        - Javier Ramos
+    """
+
+    def measure_func(*args, **kwargs):
         inicio = timer()
         c = funcion(*args, **kwargs)
         print(
@@ -83,11 +97,11 @@ def mide_tiempo(funcion):
         print(f"\u2193 Tiempo de Ejecucion: {float(timer() - inicio)}")
         return c
 
-    return funcion_medida
+    return measure_func
 
 
 def toBits(bits: list) -> list:
-    """Funcion que dado una lista de caracteres ASCII, Retorna su version en bits
+    """Dada una lista de caracteres ASCII, Retorna su version en bits
 
     Parameters
     ----------
@@ -107,18 +121,60 @@ def toBits(bits: list) -> list:
 
 
 def createSeed(bitList: list) -> str:
+    """Crea la semilla a usar en za Hash, usando el tiempo
+            y el primer elemento de la lista que recibe.
+
+    Parameters
+    ----------
+    bitList : list
+        Binarios de 7 bits que representan characteres en ASCII.
+    Returns
+    -------
+    str: Retorna la semilla inicial de largo 56 bits.
+    :Authors:
+        - Javier Ramos
+    """
     timeseed = int(time.time() / 100)
     seedbits = bin(timeseed).split('b')[1]
     seed = seedbits + bitList[0] + seedbits + "0"
     return seed
 
 
-def xor(base: str, key: str):
+def xor(base: str, key: str) -> str:
+    """calcula el XOR entre 2 streams de bits
+
+    Parameters
+    ----------
+    base : str
+        steam de bit al cual se le aplica el XOR
+    key : str
+        llave para aplicar el XOR
+    Returns
+    -------
+    str: Retorna un string del XOR resultante
+    :Authors:
+        - Javier Ramos
+    """
     xorList = [(ord(a) ^ ord(b)) for a, b in zip(base, key)]
     return "".join(map(str, xorList))
 
 
 def bestHash(bitList: list, seed: str) -> str:
+    """Calcula el hash de una lista de bits dada,
+            asegurandose que el resultado sea de 330 bits.
+
+    Parameters
+    ----------
+    bitList : list
+        bloques binarios de los caracteres del string a hashear
+    seed : str
+        la semilla en binario
+    Returns
+    -------
+    str: retorna un string de 330 caracteres en binario
+    :Authors:
+        - Javier Ramos
+    """
     hashedBits = ""
     count = 0
     seedSplit = textwrap.wrap(seed, 7)
@@ -145,7 +201,21 @@ def bestHash(bitList: list, seed: str) -> str:
         return splitBits(hashedBits)
 
 
-def splitBits(bits: str):
+def splitBits(bits: str) -> str:
+    """recibe un binario de mas de 330 bits de largo y
+        retorna el resultado de un xor entre 2 mitades del
+        binario recibido. finalBits es de 330 bits exactos.
+
+    Parameters
+    ----------
+    bits : str
+       string binario de largo mayor a 330.
+    Returns
+    -------
+    str: string binario de largo 330 bits.
+    :Authors:
+        - Javier Ramos
+    """
     firstBits = bits[:330]
     lastBits = bits[-330:]
     finalBits = xor(firstBits, lastBits)
@@ -153,6 +223,20 @@ def splitBits(bits: str):
 
 
 def toBase64(hashedBits: str) -> str:
+    """recibe una cadena de bits y los transforma a base64,
+        utiliza como apoyo la lista base64Alph.
+        Por implementacion no se agregan = si faltan bloques
+
+    Parameters
+    ----------
+    hashedBits : str
+        cadena binaria resultante de bestHash
+    Returns
+    -------
+    str: retorna un string en base64
+    :Authors:
+        - Javier Ramos
+    """
     hashSplit = textwrap.wrap(hashedBits, 6)
     base64 = ""
     for i in hashSplit:
@@ -161,8 +245,21 @@ def toBase64(hashedBits: str) -> str:
     return base64
 
 
-@mide_tiempo
-def zaHashu(x: str):
+@measure_time
+def zaHashu(x: str) -> str:
+    """Se encarga de llamar las funciones necesarias para
+        obtener un hash "za hash"
+
+    Parameters
+    ----------
+    x : str
+        string a hashear
+    Returns
+    -------
+    str: string hasheado en za hash
+    :Authors:
+        - Javier Ramos
+    """
     bits = toBits(x)
     seed = createSeed(bits)
     hashBits = bestHash(bits, seed)
@@ -170,27 +267,76 @@ def zaHashu(x: str):
     return hash
 
 
-@mide_tiempo
-def md5(word: str):
+@measure_time
+def md5(word: str) -> str:
+    """calcula el hash md5 de un string dado
+
+    Parameters
+    ----------
+    word : str
+        string a hashear
+    Returns
+    -------
+    str: string hasheado en md5
+    :Authors:
+        - Javier Ramos
+    """
     hash = hashlib.md5(word.encode())
     return hash.hexdigest()
 
 
-@mide_tiempo
-def sha256(word: str):
+@measure_time
+def sha256(word: str) -> str:
+    """calcula el hash sha256 de un string dado
+
+    Parameters
+    ----------
+    word : str
+        string a hashear
+    Returns
+    -------
+    str: string hasheado en sha256
+    :Authors:
+        - Javier Ramos
+    """
     hash = hashlib.sha256(word.encode())
     return hash.hexdigest()
 
 
-@mide_tiempo
-def sha1(word: str):
+@measure_time
+def sha1(word: str) -> str:
+    """Calcula el hash sha1 de un string dado
+
+    Parameters
+    ----------
+    word : str
+        string a hashear
+    Returns
+    -------
+    str: string hasheado en sha1
+    :Authors:
+        - Javier Ramos
+    """
     hash = hashlib.sha1(word.encode())
     return hash.hexdigest()
 
 
-def getBase(word: str):
+def getBase(word: str) -> int:
+    """dado un string, calcula la base en la que esta.
+        (se considero solo los caracteres ASCII imprimibles hasta el 125)
+
+    Parameters
+    ----------
+    word : str
+        string en alguna base
+    Returns
+    -------
+    int: entero que representa la base
+    :Authors:
+        - Javier Ramos
+    """
     base = 0
-    baseAscii = re.compile("[\x21-\x2f]|[\x3a-\x40]|[\x5b-\x60]|[\x7b-\x7e]")
+    baseAscii = re.compile(r"[\x21-\x2f]|[\x3a-\x40]|[\x5b-\x60]|[\x7b-\x7e]")
     if re.search("[a-z]", word):
         base += 26
     if re.search("[A-Z]", word):
@@ -202,7 +348,20 @@ def getBase(word: str):
     return base
 
 
-def entropy(word: str):
+def entropy(word: str) -> float:
+    """Dado un string, se encarga de calcular su base y el largo,
+        para luego determinar la entropia del texto ingresado
+
+    Parameters
+    ----------
+    word : str
+        string al cual se le calculara la entropia (clave)
+    Returns
+    -------
+    float: numero de bits de entropia.
+    :Authors:
+        - Javier Ramos
+    """
     base = getBase(word)
     Llargo = len(word)
     Wbase = base
