@@ -1,7 +1,10 @@
 import hashlib
+import re
 import textwrap
 import time
 from math import log
+from timeit import default_timer as timer
+from weakref import WeakKeyDictionary
 
 base64Alph = [
     'A',
@@ -73,9 +76,12 @@ base64Alph = [
 
 def mide_tiempo(funcion):
     def funcion_medida(*args, **kwargs):
-        inicio = time.time()
+        inicio = timer()
         c = funcion(*args, **kwargs)
-        print(time.time() - inicio)
+        print(
+            '============================================================================'
+        )
+        print(f"\u2193 Tiempo de Ejecucion: {float(timer() - inicio)}")
         return c
 
     return funcion_medida
@@ -165,11 +171,44 @@ def zaHashu(x: str):
     return hash
 
 
+@mide_tiempo
+def md5(word: str):
+    hash = hashlib.md5(word.encode())
+    return hash.hexdigest()
+
+
+@mide_tiempo
+def sha256(word: str):
+    hash = hashlib.sha256(word.encode())
+    return hash.hexdigest()
+
+
+@mide_tiempo
+def sha1(word: str):
+    hash = hashlib.sha1(word.encode())
+    return hash.hexdigest()
+
+
+def getBase(word: str):
+    base = 0
+    baseAscii = re.compile("[\x21-\x2f]|[\x3a-\x40]|[\x5b-\x60]|[\x7b-\x7e]")
+    if re.search("[a-z]", word):
+        base += 26
+    if re.search("[A-Z]", word):
+        base += 26
+    if re.search("[0-9]", word):
+        base += 10
+    if baseAscii.search(word):
+        base += 32
+    return base
+
+
 def entropy(word: str):
-    L = len(word)
-    W = 64
-    H = L * log(W, 2)
-    return H
+    base = getBase(word)
+    Llargo = len(word)
+    Wbase = base
+    Hentropia = Llargo * log(Wbase, 2)
+    return Hentropia
 
 
 def calculateEntropy(word: str):
@@ -180,22 +219,20 @@ def calculateEntropy(word: str):
         while True:
             if option == 'Y':
                 print(
-                    """======================================================
-                                    Calculando Entropia
-                    ======================================================"""
+                    """============================================================================
+                    Calculando Entropia\n============================================================================"""
                 )
                 entropia = entropy(word)
                 print(f"La entropia del hash es: {entropia}")
                 break
-            if option == 'N':
+            elif option == 'N':
                 calculo = input(
                     """Porfavor Ingresa la palabra a la cual le deseas
                     calcular la entropia: """
                 )
                 print(
-                    """======================================================
-                                Calculando Entropia
-                    ======================================================"""
+                    """============================================================================
+                    Calculando Entropia\n ============================================================================"""
                 )
                 entropia = entropy(calculo)
                 print(f"La entropia del hash es: {entropia}")
@@ -205,63 +242,152 @@ def calculateEntropy(word: str):
             """Porfavor Ingresa la palabra a la cual le deseas calcular la entropia: """
         )
         print(
-            """======================================================
-                            Calculando Entropia
-            ======================================================"""
+            """============================================================================\n
+            Calculando Entropia\n============================================================================"""
         )
         entropia = entropy(calculo)
-        print(f"La entropia del hash es: {entropia}")
+        print(f"La entropia de la clave es: {entropia}")
     return
 
 
 def main():
     hash = ""
     word = ""
+    pruebas = {'1': 1, '2': 10, '3': 20, '4': 50}
     while True:
         print(
-            """
+            """============================================================================\n
         1.Calcular Hash de Una palabra.
-        2.Calcular Hash desde el archivo rockyou.txt
-        3.Calcular Hash desde un archivo propio.
+        2.Calcular Hash desde archivo propio.
+        3.Calcular Hash desde archivo rockyou.txt
         4.Calcular Entropia Za Hashu.
-        5.Comparar Entropia.
-        9.Salir
-        """
+        5.Comparar Entropia y Ejecucion (MD5/SHA1/SHA256).
+        9.Salir\n\n============================================================================"""
         )
         x = input("Ingrese la operacion que desea Realizar: ")
 
         if x == '1':
             word = input("Ingrese la palabra que desea hashear: ")
             hash = zaHashu(word)
-            print(f"El hash de --> {word} <-- es: {hash}")
+            print(
+                '============================================================================'
+            )
+            print(f"El hash de --> {word} es: {hash}")
+            print(
+                '============================================================================'
+            )
 
-        if x == '2':
-            print("Leyendo archivo rockyou.txt")
+        elif x == '2':
+            name = input("Por favor ingresa el nombre del archivo a leer: ")
+            with open(name) as file:
+                lines = file.readlines()
+                for i in lines:
+                    line = i.strip()
+                    hash = zaHashu(line)
+                    print(
+                        f"============================================================================\n{line}\nHash:"
+                        f" {hash}\n============================================================================"
+                    )
+            file.close()
+
+        elif x == '3':
+            print(
+                '============================================================================'
+            )
             test = input(
                 """
-                    Prueba 1: 1 entrada de texto.
-                    Prueba 2: 10 entrada de texto.
-                    Prueba 3: 20 entrada de texto.
-                    Prueba 4: 50 entrada de texto.
-            Que prueba desea realizar? (Ingrese Numero de la Prueba):   """
+            Prueba 1: 1 entrada de texto.
+            Prueba 2: 10 entrada de texto.
+            Prueba 3: 20 entrada de texto.
+            Prueba 4: 50 entrada de texto.
+
+============================================================================
+Que prueba desea realizar? (Ingrese Numero de la Prueba):"""
             )
-            with open('rockyou.txt') as file:
-                for i in range():
-                    line = file.readline()
+            print("Leyendo archivo rockyou.txt")
+            if test in pruebas.keys():
+                print('owo')
+                with open('rockyou.txt') as file:
+                    for i in range(pruebas[test]):
+                        line = file.readline()
+                        hash = zaHashu(line)
+                        print(
+                            f"""============================================================================ 
+    Palabra {i+1}: {line} 
+    Hash: {hash}"""
+                        )
+                file.close()
+            else:
+                print('unu')
 
-        if x == '3':
-            print("Por favor ingresa el nombre del archivo a leer")
-
-        if x == '4':
+        elif x == '4':
             if word:
                 calculateEntropy(word)
             else:
                 calculateEntropy(word)
 
-        if x == '5':
-            print("comparando")
+        elif x == '5':
+            if word:
+                option = input(
+                    f'Se detecto que hasheo --> {word}, desea utilizarla?'
+                    ' (Y/N)'
+                )
+                while True:
+                    if option == 'Y':
+                        print(
+                            """============================================================================
+                            Calculando Tiempo de Ejecucion\n============================================================================"""
+                        )
+                        entropia = entropy(word)
+                        print(f"La entropia de {word} es: {entropia}")
+                        myhash = zaHashu(word)
+                        print(f"el hash generado por za hash es: {myhash}")
+                        hashmd5 = md5(word)
+                        print(f"el hash generado por md5 es: {hashmd5}")
+                        hashsha1 = sha1(word)
+                        print(f"el hash generado por sha1 es: {hashsha1}")
+                        hashsha256 = sha256(word)
+                        print(f"el hash generado por sha256 es: {hashsha256}")
+                        break
+                    elif option == 'N':
+                        word = input(
+                            """Porfavor Ingresa la palabra con la que deseas realizar la comparacion: """
+                        )
+                        print(
+                            """============================================================================
+                            Calculando Tiempo de Ejecucion\n============================================================================"""
+                        )
+                        entropia = entropy(word)
+                        print(f"La entropia de {word} es: {entropia}")
+                        myhash = zaHashu(word)
+                        print(f"el hash generado por za hash es: {myhash}")
+                        hashmd5 = md5(word)
+                        print(f"el hash generado por md5 es: {hashmd5}")
+                        hashsha1 = sha1(word)
+                        print(f"el hash generado por sha1 es: {hashsha1}")
+                        hashsha256 = sha256(word)
+                        print(f"el hash generado por sha256 es: {hashsha256}")
+                        break
+            else:
+                word = input(
+                    """Porfavor Ingresa la palabra con la que deseas realizar la comparacion: """
+                )
+                print(
+                    """============================================================================
+                    Calculando Tiempo de Ejecucion\n============================================================================"""
+                )
+                entropia = entropy(word)
+                print(f"La entropia de {word} es: {entropia}")
+                myhash = zaHashu(word)
+                print(f"el hash generado por za hash es: {myhash}")
+                hashmd5 = md5(word)
+                print(f"el hash generado por md5 es: {hashmd5}")
+                hashsha1 = sha1(word)
+                print(f"el hash generado por sha1 es: {hashsha1}")
+                hashsha256 = sha256(word)
+                print(f"el hash generado por sha256 es: {hashsha256}")
 
-        if x == '9':
+        elif x == '9':
             print("Adios")
             break
         else:
